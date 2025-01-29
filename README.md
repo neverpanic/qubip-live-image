@@ -1,45 +1,42 @@
-# fedora-kickstarts #
+# QUBIP Live Image
 
-This project is used to manage the Fedora kickstart files used in composing Fedora release images.
+This project is used to build a Fedora Live Image in ISO format as a test
+environment for project QUBIP.
 
-The master branch is used by rawhide and each release branch is used by that release.
+The repository is a fork of the Fedora kickstart files from
+https://pagure.io/fedora-kickstarts/. The QUBIP image is in
+`fedora-qubip-live.ks`.
 
-All changes should be made via the PR workflow.
+## Prerequisites
+You need the following Fedora packages installed:
 
-This project is packaged in Fedora as the spin-kickstarts package allowing users to see
-and modify the kickstart files for their local needs.
+ - patch
+ - livecd-tools
 
-Maintainers for each image are listed in the `maintainers.toml` file.
+Additionally, there's a bug somewhere between `livecd-tools` and the Python
+`urllib` package that breaks `livecd-creator`. To fix that, you can apply a
+patch for now:
 
-## To make a release ##
+```sh
+(cd /usr/lib64/python3.13/urllib && patch -p5) <urllib.patch
+```
 
-    git clone ssh://git@pagure.io/fedora-kickstarts.git fedora-kickstarts
-    cd fedora-kickstarts
-    # If you need a specific branch other than master:
-    git checkout BRANCHNAME
-    # No tag has been added yet tag HEAD with
-    git tag VERSION
-    git push --tags
-    make
-    # Publish the released tar ball
-    make publish
-    # Clean up the generated files:
-    make clean
+To speed up subsequent builds, create a directory to use as cache for
+downloaded RPMs:
 
-## Build logs ##
+```sh
+sudo mkdir /var/cache/live
+```
 
-To see build logs go to
+## Building the Image
+To build the image, use `livecd-creator`:
 
-https://koji.fedoraproject.org/koji
+```sh
+sudo livecd-creator \
+    -c fedora-live-qubip.ks \
+    -f Fedora-QUBIP \
+    --cache=/var/cache/live
+```
 
-"Packages" tab, and filter by Fedora-Workstation-Live for example.
-
-Technical info about the officialy released images can be found at
-
-https://kojipkgs.fedoraproject.org/compose/
-
-# bug reports #
-
-Bugs should be reported to the spin-kickstarts bugzilla component:
-
-https://bugzilla.redhat.com/enter_bug.cgi?product=Fedora&component=spin-kickstarts
+The output will be in `Fedora-QUBIP.iso`. Alternatively, you can use the
+included Makefile to achieve run the command.
